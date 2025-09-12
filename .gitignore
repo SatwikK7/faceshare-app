@@ -1,0 +1,33 @@
+# Backend
+backend/target/
+backend/uploads/
+backend/data/
+backend/face_encodings/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+
+# AI Service
+ai-service/venv/
+ai-service/__pycache__/
+ai-service/*.pyc
+ai-service/*.pyo
+ai-service/*.pyd
+ai-service/uploads/
+ai-service/temp/
+ai-service/logs/
+ai-service/.env
+
+# Frontend
+frontend/build/
+frontend/.dart_tool/
+frontend/.packages
+frontend/pubspec.lock
+
+# General
+.DS_Store
+*.log
+*.tmp
+node_modules/
+.idea/
+.vscode/

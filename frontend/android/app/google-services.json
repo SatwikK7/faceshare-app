@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "310940784560",
+    "project_id": "face-share-ccb25",
+    "storage_bucket": "face-share-ccb25.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:310940784560:android:1f56015c13de2f68fee875",
+        "android_client_info": {
+          "package_name": "com.example.faceshare"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "310940784560-jofanrdns4ch4gh23it3pd535mecfrjr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.faceshare",
+            "certificate_hash": "3b198fb764ea1011fe763d24b3f5f683f8edf7f8"
+          }
+        },
+        {
+          "client_id": "310940784560-pi7ph2sndh7h65ahoui27e9s0v5apd69.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCK0OzL371ove6l1aK8lGKT6U-TZSPjQzI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "310940784560-pi7ph2sndh7h65ahoui27e9s0v5apd69.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
