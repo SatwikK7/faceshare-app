@@ -1,17 +1,18 @@
 package com.faceshare.config;
 
 import com.faceshare.security.JwtAuthenticationFilter;
+import com.faceshare.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -29,10 +30,12 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // Expose UserService as UserDetailsService
     @Bean
-    public UserDetailsService userDetailsService(com.faceshare.service.UserService userService) {
-        return userService;
+    public DaoAuthenticationProvider authenticationProvider(UserService userService) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     @Bean
@@ -48,6 +51,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/health/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/photos/view/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
@@ -73,11 +77,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Explicit origins instead of "*"
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:8080",   // Swagger UI
-                "http://localhost:3000",   // React / Flutter Web if any
-                "http://10.0.2.2:8080"     // Android emulator access
+        // Use allowedOriginPatterns instead of allowedOrigins when allowCredentials is true
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:*",      // Any localhost port
+                "http://127.0.0.1:*",     // Any 127.0.0.1 port
+                "http://10.0.2.2:*"       // Android emulator access
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));

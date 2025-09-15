@@ -6,10 +6,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class JwtConfig {
 
-    @Value("${security.jwt.secret}")
+    @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${security.jwt.expirationMs:3600000}")
+    @Value("${jwt.expiration:3600000}")
     private long expirationMs;
 
     @Value("${security.jwt.header:Authorization}")

@@ -1,4 +1,4 @@
-# Backend
+# Backend (Spring Boot)
 backend/target/
 backend/uploads/
 backend/data/
@@ -6,8 +6,10 @@ backend/face_encodings/
 backend/.mvn/
 backend/mvnw
 backend/mvnw.cmd
+backend/src/main/resources/application-prod.yml
+backend/src/main/resources/application-local.yml
 
-# AI Service
+# AI Service (Python)
 ai-service/venv/
 ai-service/__pycache__/
 ai-service/*.pyc
@@ -17,17 +19,54 @@ ai-service/uploads/
 ai-service/temp/
 ai-service/logs/
 ai-service/.env
+ai-service/models/
+ai-service/*.pkl
 
-# Frontend
+# Frontend (Flutter)
 frontend/build/
 frontend/.dart_tool/
 frontend/.packages
 frontend/pubspec.lock
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/ios/Pods/
+frontend/ios/.symlinks/
+frontend/android/.gradle/
+frontend/android/app/debug/
+frontend/android/app/profile/
+frontend/android/app/release/
 
-# General
-.DS_Store
+# Development & Testing
 *.log
 *.tmp
-node_modules/
+test-images/
+temp/
+.env
+.env.local
+.env.development
+.env.production
+
+# IDE & OS
+.DS_Store
 .idea/
 .vscode/
+*.swp
+*.swo
+*~
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Database files (keep structure, ignore data)
+*.db
+*.sqlite
+*.sqlite3
+
+# Security (never commit these)
+*.key
+*.pem
+*.p12
+secrets/
+credentials/

@@ -18,11 +18,15 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: never
 
   h2:
     console:
@@ -69,8 +73,4 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 
-security:
-  jwt:
-    secret: "very_secret_key_change_this"   # use env var in production!
-    expirationMs: 3600000                   # 1h
-    header: Authorization
+

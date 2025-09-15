@@ -19,7 +19,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/photos")
-@CrossOrigin(origins = "*")
 public class PhotoController {
 
     @Autowired
@@ -56,7 +55,9 @@ public class PhotoController {
     public ResponseEntity<Resource> viewPhoto(@PathVariable Long photoId) {
         try {
             Photo photo = photoService.getPhotoById(photoId);
-            Path filePath = fileStorageService.loadFileAsResource(photo.getFileName());
+            // Extract just the filename from the full path
+            String fileName = photo.getFilePath().substring(photo.getFilePath().lastIndexOf("/") + 1);
+            Path filePath = fileStorageService.loadFileAsResource(fileName);
             Resource resource = new UrlResource(filePath.toUri());
 
             return ResponseEntity.ok()

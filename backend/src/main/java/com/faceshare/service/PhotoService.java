@@ -33,10 +33,11 @@ public class PhotoService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String fileName = fileStorageService.storeFile(file);
+        String filePath = "./uploads/" + fileName; // Full path for storage
 
         Photo photo = new Photo(
                 file.getOriginalFilename(),
-                fileName,
+                filePath,
                 file.getSize(),
                 file.getContentType(),
                 user
@@ -45,8 +46,13 @@ public class PhotoService {
         Photo savedPhoto = photoRepository.save(photo);
 
         // Trigger face recognition processing asynchronously
-        //faceRecognitionService.processPhotoAsync(savedPhoto);
-        faceRecognitionService.detectFaces(new File(photo.getFilePath()));
+        try {
+            faceRecognitionService.detectFaces(new File(savedPhoto.getFilePath()));
+            savedPhoto.setProcessingStatus(Photo.ProcessingStatus.COMPLETED);
+        } catch (Exception e) {
+            savedPhoto.setProcessingStatus(Photo.ProcessingStatus.FAILED);
+        }
+        photoRepository.save(savedPhoto);
 
 
         return convertToDto(savedPhoto);
