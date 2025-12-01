@@ -27,10 +27,12 @@ COPY config/ ./config/
 COPY services/ ./services/
 COPY utils/ ./utils/
 COPY main.py .
+COPY download_models.sh .
 
-# Copy ONNX models (these are large files)
-COPY models/det_10g.onnx ./models/det_10g.onnx
-COPY models/w600k_r50.onnx ./models/w600k_r50.onnx
+# Download ONNX models (not in git due to size)
+# Alternative: Set DET_MODEL_URL and REC_MODEL_URL env vars to custom URLs
+RUN chmod +x download_models.sh && \
+    bash download_models.sh || echo "Model download failed - will retry at runtime"
 
 # Create directories for temporary files
 RUN mkdir -p /tmp/faceshare/uploads /tmp/faceshare/temp
