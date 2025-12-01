@@ -93,40 +93,39 @@ Follow these steps IN ORDER:
 
 1. In Railway, click "New" → "GitHub Repo"
 2. Select your `faceshare-app` repository
-3. Railway detects Spring Boot automatically
-4. Set Root Directory: `backend`
-5. Add Environment Variables:
+3. **IMPORTANT:** After deployment starts, click on the service
+4. Go to "Settings" tab
+5. Scroll down to "Service" section
+6. Find "Root Directory" and set it to: `backend`
+7. Click "Update" (service will redeploy automatically)
+8. Go to "Variables" tab and add Environment Variables:
    ```
    JWT_SECRET=<paste-your-generated-secret>
    CLOUDINARY_URL=<paste-from-cloudinary-dashboard>
    ```
-6. Click "Deploy"
-7. Wait for build (~5 minutes)
-8. ✅ Note your backend URL: `https://faceshare-backend.up.railway.app`
+9. Wait for build to complete (~5 minutes)
+10. ✅ Go to "Settings" → "Networking" → "Generate Domain" to get your backend URL
+
+**Note:** Railway auto-detects Spring Boot once root directory is set correctly.
 
 ### Step 3: Deploy AI Service (Python/Flask) (10 minutes)
 
 1. In Railway, click "New" → "GitHub Repo"
 2. Select your `faceshare-app` repository again
-3. Set Root Directory: `ai-service`
-4. Railway will use the Dockerfile
-5. **IMPORTANT:** Add ONNX models to Git (if not already):
-   ```bash
-   cd ai-service
-   git lfs track "*.onnx"
-   git add models/det_10g.onnx models/w600k_r50.onnx
-   git add .gitattributes
-   git commit -m "Add ONNX models for deployment"
-   git push
-   ```
-6. Click "Deploy"
-7. Wait for build (~7 minutes - models are large)
-8. ✅ Note the internal URL: `ai-service.railway.internal`
+3. **IMPORTANT:** After deployment starts, click on the service
+4. Go to "Settings" tab
+5. Scroll down to "Service" section
+6. Find "Root Directory" and set it to: `ai-service`
+7. Click "Update" (service will redeploy automatically)
+8. Railway will detect the Dockerfile and use it for deployment
+9. Wait for build (~10-15 minutes - downloading ONNX models during build)
+10. ✅ Models will be downloaded automatically via `download_models.sh` script
 
-**IMPORTANT:** If models are too large for Git, alternative:
-- Upload models to Cloudinary or Google Drive
-- Modify Dockerfile to download on startup
-- Or use Railway's volume storage
+**How it works:**
+- ONNX models are NOT in Git (183MB total - too large)
+- Dockerfile runs `download_models.sh` during build
+- Models download from InsightFace GitHub releases
+- First build takes longer, subsequent builds use Docker cache
 
 ### Step 4: Connect Backend to AI Service (2 minutes)
 
