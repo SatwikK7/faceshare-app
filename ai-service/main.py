@@ -12,7 +12,8 @@ from werkzeug.utils import secure_filename
 import requests
 
 from config.settings import Config
-from services.insightface_onnx import InsightFaceONNX
+# from services.insightface_onnx import InsightFaceONNX  # Real AI service (requires models)
+from services.dummy_face_service import DummyFaceService  # Mock service for testing
 from utils.image_utils import allowed_file, save_uploaded_file
 import numpy as np
 
@@ -28,28 +29,52 @@ app = Flask(__name__)
 app.config.from_object(Config)
 CORS(app)
 
-# Initialize InsightFace ONNX service
-MODEL_DIR = "models"
-DET_MODEL = os.path.join(MODEL_DIR, "det_10g.onnx")
-REC_MODEL = os.path.join(MODEL_DIR, "w600k_r50.onnx")
+# Initialize Face Recognition Service
+# Using DUMMY service for testing (no models required)
+# TODO: Replace with InsightFaceONNX once models are available
+USE_DUMMY = os.getenv('USE_DUMMY_AI', 'true').lower() == 'true'
 
-insightface = InsightFaceONNX(
-    det_model_path=DET_MODEL,
-    rec_model_path=REC_MODEL
-)
+if USE_DUMMY:
+    logger.warning("=" * 60)
+    logger.warning("⚠️  USING DUMMY AI SERVICE - NOT REAL FACE DETECTION!")
+    logger.warning("⚠️  This is for testing the full app flow only")
+    logger.warning("⚠️  Set USE_DUMMY_AI=false to use real InsightFace")
+    logger.warning("=" * 60)
+    insightface = DummyFaceService()
+else:
+    from services.insightface_onnx import InsightFaceONNX
+    MODEL_DIR = "models"
+    DET_MODEL = os.path.join(MODEL_DIR, "det_10g.onnx")
+    REC_MODEL = os.path.join(MODEL_DIR, "w600k_r50.onnx")
+    insightface = InsightFaceONNX(
+        det_model_path=DET_MODEL,
+        rec_model_path=REC_MODEL
+    )
 
 @app.route('/', methods=['GET'])
 def health_check():
     """Health check endpoint"""
-    return jsonify({
-        'status': 'healthy',
-        'service': 'FaceShare AI Service',
-        'version': '2.0.0',
-        'engine': 'InsightFace ONNX',
-        'detection_model': 'SCRFD (det_10g)',
-        'recognition_model': 'ArcFace (w600k_r50)',
-        'accuracy': '99.8%+ (LFW benchmark)'
-    })
+    if USE_DUMMY:
+        return jsonify({
+            'status': 'healthy',
+            'service': 'FaceShare AI Service (TESTING MODE)',
+            'version': '2.0.0-dummy',
+            'engine': 'Dummy/Mock Service',
+            'detection_model': 'FAKE - Random detection',
+            'recognition_model': 'FAKE - Random embeddings',
+            'accuracy': 'N/A - Not real AI',
+            'warning': 'This is a mock service for testing. Set USE_DUMMY_AI=false for real face detection.'
+        })
+    else:
+        return jsonify({
+            'status': 'healthy',
+            'service': 'FaceShare AI Service',
+            'version': '2.0.0',
+            'engine': 'InsightFace ONNX',
+            'detection_model': 'SCRFD (det_10g)',
+            'recognition_model': 'ArcFace (w600k_r50)',
+            'accuracy': '99.8%+ (LFW benchmark)'
+        })
 
 @app.route('/detect-faces', methods=['POST'])
 def detect_faces():

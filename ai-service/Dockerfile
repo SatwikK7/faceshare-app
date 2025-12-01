@@ -29,14 +29,13 @@ COPY config/ ./config/
 COPY services/ ./services/
 COPY utils/ ./utils/
 COPY main.py .
-COPY download_models.sh .
 
-# Download ONNX models (not in git due to size)
-# Alternative: Set DET_MODEL_URL and REC_MODEL_URL env vars to custom URLs
-RUN chmod +x download_models.sh && bash download_models.sh
+# Create directories for models and temporary files
+# Models are NOT downloaded - using dummy service for testing
+RUN mkdir -p models /tmp/faceshare/uploads /tmp/faceshare/temp
 
-# Create directories for temporary files
-RUN mkdir -p /tmp/faceshare/uploads /tmp/faceshare/temp
+# Set environment variable to use dummy AI service
+ENV USE_DUMMY_AI=true
 
 # Expose port (Railway will override with $PORT)
 EXPOSE 5000
