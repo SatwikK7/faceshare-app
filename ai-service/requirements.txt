@@ -1,24 +1,17 @@
-# AI Service Dependencies
 flask==2.3.3
 flask-cors==4.0.0
 opencv-python==4.8.1.78
-face-recognition==1.3.0
 pillow==10.0.1
-numpy==1.24.3
+numpy>=1.21.6,<2.0.0
 requests==2.31.0
 python-dotenv==1.0.0
+
+# Production WSGI server
 gunicorn==21.2.0
+
+# InsightFace ONNX Stack (Production-grade face recognition)
+onnxruntime==1.23.2
+faiss-cpu==1.12.0
 
 # Image processing
 scikit-image==0.21.0
-matplotlib==3.7.2
-
-# Utilities
-python-multipart==0.0.6
-watchdog==3.0.0
-
-# Development
-pytest==7.4.2
-pytest-flask==1.2.0
-black==23.7.0
-flake8==6.0.0

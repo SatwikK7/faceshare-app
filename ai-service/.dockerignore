@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Testing
+test_images/
+test_visual.py
+debug_*.py
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+*.md
+!requirements.txt
+
+# Data
+uploads/
+temp/
+*.jpg
+*.jpeg
+*.png
+*.gif

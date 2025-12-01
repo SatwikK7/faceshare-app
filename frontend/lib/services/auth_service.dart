@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
 import '../models/user.dart';
 import '../utils/constants.dart';
+import 'api_service.dart';
 
 class AuthService extends ChangeNotifier {
   final SharedPreferences _prefs;
@@ -13,7 +13,11 @@ class AuthService extends ChangeNotifier {
   String? _token;
   bool _isLoading = false;
   
+  // Static instance for backward compatibility
+  static AuthService? _instance;
+  
   AuthService(this._prefs) {
+    _instance = this;
     _loadUserFromStorage();
   }
   
@@ -22,6 +26,9 @@ class AuthService extends ChangeNotifier {
   String? get token => _token;
   bool get isLoggedIn => _currentUser != null && _token != null;
   bool get isLoading => _isLoading;
+  
+  // Static getter for backward compatibility
+  static User? get staticCurrentUser => _instance?._currentUser;
   
   // Load user data from local storage
   Future<void> _loadUserFromStorage() async {
@@ -53,240 +60,80 @@ class AuthService extends ChangeNotifier {
     if (_token == null) return;
     
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/api/auth/me'),
-        headers: {
-          'Authorization': 'Bearer $_token',
-          'Content-Type': 'application/json',
-        },
-      );
-      
-      if (response.statusCode == 200) {
-        _token = responseData['token'];
-        _currentUser = User.fromJson({
-          'id': responseData['userId'],
-          'email': responseData['email'],
-          'fullName': responseData['fullName'],
-          'profileImageUrl': responseData['profileImageUrl'],
-        });
-        
-        await _saveUserToStorage();
-        
-        _isLoading = false;
-        notifyListeners();
-        
-        return AuthResult.success('Login successful');
-      } else {
-        _isLoading = false;
-        notifyListeners();
-        
-        return AuthResult.error(responseData['error'] ?? 'Login failed');
-      }
+      final apiService = ApiService();
+      await apiService.getCurrentUser(_token!);
+      // Token is valid, keep current user
     } catch (e) {
-      _isLoading = false;
-      notifyListeners();
-      
-      return AuthResult.error('Network error: ${e.toString()}');
+      debugPrint('Token verification failed: $e');
+      await _clearUserData();
     }
   }
-  
-  // Logout user
-  Future<void> logout() async {
+
+  // Login method
+  Future<bool> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
-      // Call logout endpoint if needed
-      if (_token != null) {
-        await http.post(
-          Uri.parse('${ApiConstants.baseUrl}/api/auth/logout'),
-          headers: {
-            'Authorization': 'Bearer $_token',
-            'Content-Type': 'application/json',
-          },
-        );
-      }
-    } catch (e) {
-      debugPrint('Error during logout API call: $e');
-    }
-    
-    await _clearUserData();
-    
-    _isLoading = false;
-    notifyListeners();
-  }
-  
-  // Update user profile
-  Future<AuthResult> updateProfile({
-    required String fullName,
-    String? profileImageUrl,
-  }) async {
-    if (_currentUser == null || _token == null) {
-      return AuthResult.error('User not logged in');
-    }
-    
-    _isLoading = true;
-    notifyListeners();
-    
-    try {
-      final response = await http.put(
-        Uri.parse('${ApiConstants.baseUrl}/api/users/profile'),
-        headers: {
-          'Authorization': 'Bearer $_token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'fullName': fullName,
-          'profileImageUrl': profileImageUrl,
-        }),
-      );
+      final apiService = ApiService();
+      final response = await apiService.login(email, password);
       
-      if (response.statusCode == 200) {
-        final userData = jsonDecode(response.body);
-        _currentUser = User.fromJson(userData);
-        await _saveUserToStorage();
-        
-        _isLoading = false;
-        notifyListeners();
-        
-        return AuthResult.success('Profile updated successfully');
-      } else {
-        _isLoading = false;
-        notifyListeners();
-        
-        final responseData = jsonDecode(response.body);
-        return AuthResult.error(responseData['error'] ?? 'Profile update failed');
-      }
-    } catch (e) {
-      _isLoading = false;
-      notifyListeners();
+      _token = response['token'];
+      _currentUser = User.fromJson(response);
       
-      return AuthResult.error('Network error: ${e.toString()}');
-    }
-  }
-  
-  // Save user data to local storage
-  Future<void> _saveUserToStorage() async {
-    if (_currentUser != null && _token != null) {
+      // Save to storage
       await _prefs.setString(StorageKeys.authToken, _token!);
       await _prefs.setString(StorageKeys.userData, jsonEncode(_currentUser!.toJson()));
+      
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Login failed: $e');
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
-  
-  // Clear user data from memory and storage
+
+  // Register method
+  Future<bool> register(String email, String password, String fullName) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final apiService = ApiService();
+      final response = await apiService.register(email, password, fullName);
+      
+      _token = response['token'];
+      _currentUser = User.fromJson(response);
+      
+      // Save to storage
+      await _prefs.setString(StorageKeys.authToken, _token!);
+      await _prefs.setString(StorageKeys.userData, jsonEncode(_currentUser!.toJson()));
+      
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Registration failed: $e');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Logout method
+  Future<void> logout() async {
+    await _clearUserData();
+  }
+
+  // Clear user data
   Future<void> _clearUserData() async {
     _currentUser = null;
     _token = null;
-    
     await _prefs.remove(StorageKeys.authToken);
     await _prefs.remove(StorageKeys.userData);
-  }
-  
-  // Get authorization header
-  Map<String, String> getAuthHeaders() {
-    if (_token == null) {
-      throw Exception('No authentication token available');
-    }
-    
-    return {
-      'Authorization': 'Bearer $_token',
-      'Content-Type': 'application/json',
-    };
+    notifyListeners();
   }
 }
-
-// Auth result class
-class AuthResult {
-  final bool success;
-  final String message;
-  
-  AuthResult._(this.success, this.message);
-  
-  factory AuthResult.success(String message) => AuthResult._(true, message);
-  factory AuthResult.error(String message) => AuthResult._(false, message);
-} == 401) {
-        // Token is invalid, clear user data
-        await _clearUserData();
-      } else if (response.statusCode == 200) {
-        // Update user data
-        final userData = jsonDecode(response.body);
-        _currentUser = User.fromJson(userData);
-        await _saveUserToStorage();
-      }
-    } catch (e) {
-      debugPrint('Error verifying token: $e');
-    }
-  }
-  
-  // Register new user
-  Future<AuthResult> register({
-    required String email,
-    required String password,
-    required String fullName,
-  }) async {
-    _isLoading = true;
-    notifyListeners();
-    
-    try {
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/api/auth/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-          'fullName': fullName,
-        }),
-      );
-      
-      final responseData = jsonDecode(response.body);
-      
-      if (response.statusCode == 200) {
-        _token = responseData['token'];
-        _currentUser = User.fromJson({
-          'id': responseData['userId'],
-          'email': responseData['email'],
-          'fullName': responseData['fullName'],
-          'profileImageUrl': responseData['profileImageUrl'],
-        });
-        
-        await _saveUserToStorage();
-        
-        _isLoading = false;
-        notifyListeners();
-        
-        return AuthResult.success('Registration successful');
-      } else {
-        _isLoading = false;
-        notifyListeners();
-        
-        return AuthResult.error(responseData['error'] ?? 'Registration failed');
-      }
-    } catch (e) {
-      _isLoading = false;
-      notifyListeners();
-      
-      return AuthResult.error('Network error: ${e.toString()}');
-    }
-  }
-  
-  // Login user
-  Future<AuthResult> login({
-    required String email,
-    required String password,
-  }) async {
-    _isLoading = true;
-    notifyListeners();
-    
-    try {
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/api/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-      );
-      
-      final responseData = jsonDecode(response.body);
-      
-      if (response.statusCode

@@ -6,9 +6,7 @@ import 'services/auth_service.dart';
 import 'services/api_service.dart';
 import 'services/photo_service.dart';
 import 'screens/auth/login_screen.dart';
-import 'screens/home/home_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
-import 'utils/constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,23 +29,23 @@ class FaceShareApp extends StatelessWidget {
         Provider<SharedPreferences>.value(value: prefs),
         ChangeNotifierProvider(create: (_) => AuthService(prefs)),
         Provider(create: (_) => ApiService()),
-        ChangeNotifierProvider(create: (context) => PhotoService(context.read<ApiService>())),
+        ChangeNotifierProvider(create: (context) => PhotoService(context.read<ApiService>(), context.read<AuthService>())),
       ],
       child: MaterialApp(
         title: 'FaceShare',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.deepPurple,
-          primaryColor: AppColors.primaryColor,
-          scaffoldBackgroundColor: AppColors.backgroundColor,
+          primaryColor: const Color(0xFF673AB7),
+          scaffoldBackgroundColor: const Color(0xFFF8F9FA),
           appBarTheme: const AppBarTheme(
-            backgroundColor: AppColors.primaryColor,
+            backgroundColor: Color(0xFF673AB7),
             foregroundColor: Colors.white,
             elevation: 0,
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryColor,
+              backgroundColor: const Color(0xFF673AB7),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -61,7 +59,7 @@ class FaceShareApp extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primaryColor, width: 2),
+              borderSide: const BorderSide(color: Color(0xFF673AB7), width: 2),
             ),
           ),
           cardTheme: CardTheme(
@@ -93,14 +91,4 @@ class FaceShareApp extends StatelessWidget {
   }
 }
 
-class AppColors {
-  static const Color primaryColor = Color(0xFF673AB7); // Deep Purple
-  static const Color accentColor = Color(0xFF9C27B0); // Purple
-  static const Color backgroundColor = Color(0xFFF8F9FA);
-  static const Color cardColor = Colors.white;
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
-  static const Color success = Color(0xFF4CAF50);
-  static const Color error = Color(0xFFF44336);
-  static const Color warning = Color(0xFFFF9800);
-}
+// App Colors moved to separate constants file

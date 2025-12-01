@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     multipart:
       max-file-size: 10MB
@@ -9,68 +9,116 @@ spring:
   application:
     name: faceshare-backend
 
+  # Database Configuration
+  # Production: Uses PostgreSQL (Railway provides these env vars automatically)
+  # Development: Falls back to H2
   datasource:
-    url: jdbc:h2:file:./data/faceshare;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE
-    username: sa
-    password: password
-    driver-class-name: org.h2.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:file:./data/faceshare;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    # Auto-detect dialect (PostgreSQL or H2)
     hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+      ddl-auto: update  # Keep this for schema evolution
+    show-sql: false  # Disable SQL logging in production
     properties:
       hibernate:
-        format_sql: true
-    defer-datasource-initialization: true
-  sql:
-    init:
-      mode: never
+        format_sql: false
+        jdbc:
+          lob:
+            non_contextual_creation: true  # Required for PostgreSQL
+    defer-datasource-initialization: false
+
+  # H2 Console (only for local development)
+  h2:
+    console:
+      enabled: ${H2_CONSOLE_ENABLED:false}
+      path: /h2-console
+      settings:
+        web-allow-others: false
+
+# JWT Configuration
+# IMPORTANT: MUST set JWT_SECRET environment variable in production!
+# Generate with: openssl rand -base64 64
+jwt:
+  secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890}
+  expiration: 86400000 # 24 hours in milliseconds
+
+# Cloudinary Configuration
+# Required for production deployment
+# Format: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+# Get from: https://console.cloudinary.com/
+cloudinary:
+  url: ${CLOUDINARY_URL:}
+
+# File Storage Configuration
+# Only used if Cloudinary is not configured (local development)
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:./uploads}
+  max-size: 10485760 # 10MB in bytes
+
+# AI Service Configuration
+# Production: Railway internal URL (http://ai-service.railway.internal:5000)
+# Development: localhost
+ai-service:
+  url: ${AI_SERVICE_URL:http://localhost:5000}
+  timeout: 60000 # 60 seconds (increased for Railway cold starts)
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.faceshare: ${LOG_LEVEL:INFO}
+    org.springframework.security: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Actuator (for Railway health checks)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+---
+# Development Profile (optional - activate with SPRING_PROFILES_ACTIVE=dev)
+spring:
+  config:
+    activate:
+      on-profile: dev
 
   h2:
     console:
       enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
 
-# JWT Configuration
-jwt:
-  secret: mySecretKey123456789012345678901234567890
-  expiration: 86400000 # 24 hours in milliseconds
-
-# File Storage Configuration
-file:
-  upload-dir: ./uploads
-  max-size: 10485760 # 10MB in bytes
-
-# AI Service Configuration
-ai-service:
-  url: http://localhost:5000
-  timeout: 30000 # 30 seconds
-
-# CORS Configuration
-#cors:
-#  allowed-origins:
-#    - http://localhost:3000
-#    - http://10.0.2.2:8080 # Android emulator
-#  allowed-methods:
-#    - GET
-#    - POST
-#    - PUT
-#    - DELETE
-#    - OPTIONS
-#  allowed-headers:
-#    - "*"
-#  allow-credentials: true
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
 logging:
   level:
     com.faceshare: DEBUG
     org.springframework.security: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
+---
+# Production Profile (optional - activate with SPRING_PROFILES_ACTIVE=prod)
+spring:
+  config:
+    activate:
+      on-profile: prod
 
+  jpa:
+    show-sql: false
 
+logging:
+  level:
+    com.faceshare: INFO
+    org.springframework.security: WARN
