@@ -33,8 +33,7 @@ COPY download_models.sh .
 
 # Download ONNX models (not in git due to size)
 # Alternative: Set DET_MODEL_URL and REC_MODEL_URL env vars to custom URLs
-RUN chmod +x download_models.sh && \
-    bash download_models.sh || echo "Model download failed - will retry at runtime"
+RUN chmod +x download_models.sh && bash download_models.sh
 
 # Create directories for temporary files
 RUN mkdir -p /tmp/faceshare/uploads /tmp/faceshare/temp
